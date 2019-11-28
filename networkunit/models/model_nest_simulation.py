@@ -1,5 +1,4 @@
 import sciunit
-import quantities as pq
 from .backends import available_backends
 try:
     import nest
@@ -12,36 +11,60 @@ except ImportError:
 class nest_simulation(sciunit.models.RunnableModel):
     # ToDo: How to use attrs?
 
-    def __init__(self, name, backend='Nest', attrs=None, model_params=None):
+    def __init__(self, name,
+                 backend='Nest',
+                 attrs=None,
+                 model_params=None):
+
         super(nest_simulation, self).__init__(name=name,
                                               backend=backend,
                                               attrs=attrs)
 
-        if not hasattr(self, model_params):
+        if not hasattr(self, 'model_params'):
             self.model_params = {}
         if model_params is not None:
             self.model_params.update(model_params)
 
-        default_run_params = {"resolution": 1*pq.ms,
-                              "print_time": True,
-                              "overwrite_files": True,
-                              "simtime": 1000*pq.ms}
-
-        self.set_default_run_params(**default_run_params)
+        # # Default kernel status `nest.GetKernelStatus()`
+        # nest.ResetKernel()
+        # default_run_params = nest.GetKernelStatus()
+        #
+        # # Remove keys that could raise an error while setting them
+        # non_settable_params = ['T_max',
+        #                        'T_min',
+        #                        'tics_per_step',
+        #                        'time_collocate',
+        #                        'time_communicate',
+        #                        'to_do',
+        #                        'min_delay',
+        #                        'max_delay']
+        # for key in non_settable_params:
+        #     try:
+        #         default_run_params.pop(key)
+        #     except KeyError:
+        #         print(key + ' was not in the default_run_params dict')
+        #
+        # self.set_default_run_params(**default_run_params)
         return None
 
     def init_simulation(self):
-        """Initializes the Nest simulation with the run_params.
-        Is called from self.backend._backend_run()."""
-        nest.ResetKernel()
-        kernel_params = nest.GetKernelStatus()
+        """
+        Initialize the Nest simulation with the run_params.
+
+        Is called from self.backend._backend_run().
+        """
+        kernel_params = self.default_run_params
         kernel_params.update(self.run_params)
+        nest.ResetKernel()
         nest.SetKernelStatus(kernel_params)
-        return None
+        pass
 
     def init_model(self):
-        """Setups and connects the network model with model_params.
-        Is called from self.backend._backend_run()."""
+        """
+        Set up and connect the network model with model_params.
+
+        Is called from self.backend._backend_run().
+        """
 
         # setup network
         self.setup_network()

@@ -1,5 +1,6 @@
 from sciunit.models.backends import Backend
 import os
+import time
 try:
     import nest
     nest_available = True
@@ -13,7 +14,7 @@ class NestBackend(Backend):
     def init_backend(self, **kwargs):
         if nest_available:
             print("Initialize {} backend".format(self.name))
-            print("Nest version: {}".format(nest.__version__))
+            print("Nest version: {}".format(nest.version()))
             print("Use memory chache: {}"\
                   .format(kwargs.get('use_memory_cache', True)))
             print("Use disk chache: {}"\
@@ -37,7 +38,7 @@ class NestBackend(Backend):
 
         ## Run Simulation
         starttime = time.time()
-        if callable(getattr(model, 'simulate', None)):
+        if callable(getattr(self.model, 'simulate', None)):
             results = model.simulate(self.model.run_params['simtime'])
         else:
             results = nest.Simulate(self.model.run_params['simtime'])
